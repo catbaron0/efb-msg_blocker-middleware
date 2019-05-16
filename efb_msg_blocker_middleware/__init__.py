@@ -263,7 +263,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
         # print("message", message.__dict__)
         # print("author:", author.__dict__)
         # print("chat:", chat.__dict__)
-        if target:
+        # if target:
             # print("target:", target.__dict__)
             # print("target.author:", target.author.__dict__)
             # print("target.target:", target.chat.__dict__)
