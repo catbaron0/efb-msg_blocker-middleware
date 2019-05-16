@@ -26,8 +26,7 @@ cd efb-msg_blocker-middleware
 Python setup.py install # You may need su permission here
 ```
 * Register to EFB
-add this middleware following [this document](https://ehforwarderbot.readthedocs.io/en/latest/getting-started.html). It should looks like 
-
+Following [this document](https://ehforwarderbot.readthedocs.io/en/latest/getting-started.html) to edit the config file. The config file by default is `~/.ehforwarderbot/profiles/default`. It should look like:
 ```
 master_channel: foo.demo_master
 slave_channels:
@@ -35,7 +34,7 @@ slave_channels:
 - bar.dummy
 middlewares:
 - foo.other_middlewares
-- catbaron.sticker2img
+- catbaron.message_blocker
 ```
 
 You only need to add the last line to your config file.
