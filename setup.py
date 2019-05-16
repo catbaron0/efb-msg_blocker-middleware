@@ -17,7 +17,7 @@ setup(
     long_description=long_description,
     author='catbaron',
     author_email='catbaron@live.cn',
-#    url='https://github.com/blueset/efb-wechat-slave',
+    url='https://github.com/catbaron0/efb-msg_blocker-middleware',
     license='AGPLv3+',
     include_package_data=True,
     python_requires='>=3.6',
