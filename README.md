@@ -19,11 +19,29 @@ You need to use **MessageBlocker** on top of [EFB](https://ehforwarderbot.readth
 
 ## Install
 
+* Install
 ```
-git clone https://github.com/catbaron/efb-msg_blocker-middleware
+git clone https://github.com/catbaron0/efb-msg_blocker-middleware
 cd efb-msg_blocker-middleware
 Python setup.py install # You may need su permission here
 ```
+* Register to EFB
+add this middleware following [this document](https://ehforwarderbot.readthedocs.io/en/latest/getting-started.html). It should looks like 
+
+```
+master_channel: foo.demo_master
+slave_channels:
+- foo.demo_slave
+- bar.dummy
+middlewares:
+- foo.other_middlewares
+- catbaron.sticker2img
+```
+
+You only need to add the last line to your config file.
+
+* Restart EFB.
+
 ## How it works
 MesageBlocker support three types of filter:
 

@@ -200,7 +200,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
 
     def sent_by_me(self, message: EFBMsg) -> bool:
         author = message.author
-        if author.channel_id == 'blueset.telegram' and author.chat_uid == '__self__':
+        if author.module_id == 'blueset.telegram' and author.chat_uid == '__self__':
             return True
         else:
             return False
