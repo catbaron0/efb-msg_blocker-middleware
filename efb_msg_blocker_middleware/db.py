@@ -16,7 +16,7 @@ class DatabaseManager:
                 database = self.db
 
         class Filter(BaseModel):
-            author_channel_id = CharField()
+            author_module_id = CharField()
             author_channel_name = CharField()
             author_chat_name = CharField()
             author_chat_alias = CharField()
@@ -38,7 +38,7 @@ class DatabaseManager:
     def add_filter(self, message: EFBMsg, filter_text: str):
         chat = message.chat
         self.Filter.create(
-                author_channel_id = str(chat.channel_id),
+                author_module_id = str(chat.module_id),
                 author_channel_name = str(chat.channel_name),
                 author_chat_name = str(chat.chat_name),
                 author_chat_alias = str(chat.chat_alias),

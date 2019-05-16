@@ -32,9 +32,9 @@ class MessageBlockerMiddleware(EFBMiddleware):
 
     Author: Catbaron <https://github.com/catbaron>
     """
-    # author_channel_id: the channel where the msg from
+    # author_module_id: the channel where the msg from
     # author_chat_uid: The user who send the msg. '__self__' if it is sent by you
-    # chat_channel_id: the channel where the chat blongs to (wechat for instanfce)
+    # chat_module_id: the channel where the chat blongs to (wechat for instanfce)
     # chat_chat_uid: the chat where the msg blongs to (the wechat group for instance)
 
     middleware_id = "catbaron.msg_blocker"
@@ -130,7 +130,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
 
     def cmd_del_filter(self, message: EFBMsg, filter_id: str) -> EFBMsg:
         target = message.target
-        author_channel_id: str = message.chat.channel_id
+        author_module_id: str = message.chat.module_id
         chat_chat_uid: str = message.chat.chat_uid
         if not filter_id and target:
             filter_data = []
@@ -158,32 +158,32 @@ class MessageBlockerMiddleware(EFBMiddleware):
 
     def select_filters(self, message: EFBMsg):
         filters = None
-        author_channel_id: str = message.chat.channel_id
+        author_module_id: str = message.chat.module_id
         chat_chat_uid: str = message.chat.chat_uid
         filters = self.db.Filter.select().where(
-            self.db.Filter.author_channel_id == author_channel_id,
+            self.db.Filter.author_module_id == author_module_id,
             self.db.Filter.chat_chat_uid == chat_chat_uid
         )
         return filters
 
     def update_filters(self, message: EFBMsg):
         self.logger.info('Update filter')
-        author_channel_id: str = message.chat.channel_id
+        author_module_id: str = message.chat.module_id
         chat_chat_uid: str = message.chat.chat_uid
         filters = self.select_filters(message)
-        self.filters[(author_channel_id, chat_chat_uid)] = filters
+        self.filters[(author_module_id, chat_chat_uid)] = filters
         # try:
         #     filters = self.db.Filter.select(
-        #         self.db.Filter.author_channel_id == author_channel_id,
+        #         self.db.Filter.author_module_id == author_module_id,
         #         self.db.Filter.chat_chat_uid == chat_chat_uid
         #         )
-        #     self.filters[(author_channel_id, chat_chat_uid)] = filters
+        #     self.filters[(author_module_id, chat_chat_uid)] = filters
         # except Exception as e:
         #     self.logger.info('Update filters failed: %s', str(e))
         return filters
 
     def get_filters(self, message: EFBMsg):
-        key = (message.chat.channel_id,  message.chat.chat_uid)
+        key = (message.chat.module_id,  message.chat.chat_uid)
         return self.filters.get(key, self.update_filters(message))
 
     def load_config(self):
