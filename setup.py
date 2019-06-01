@@ -7,7 +7,7 @@ if sys.version_info < (3, 6):
 __version__ = ""
 exec(open('efb_msg_blocker_middleware/__version__.py').read())
 
-long_description = open('README.rst').read()
+long_description = open('README.md').read()
 
 setup(
     name='efb-msg_blocker-middleware',

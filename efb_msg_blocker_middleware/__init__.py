@@ -279,7 +279,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
                 if cmd in self.commands:
                     return self.commands[cmd](message, arg)
                 else:
-                    return None
+                    return message
             else:
                 # normal message, pass it.
                 return message

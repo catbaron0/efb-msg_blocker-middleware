@@ -17,7 +17,7 @@ class DatabaseManager:
 
         class Filter(BaseModel):
             author_module_id = CharField()
-            author_channel_name = CharField()
+            author_module_name = CharField()
             author_chat_name = CharField()
             author_chat_alias = CharField()
 
@@ -39,7 +39,7 @@ class DatabaseManager:
         chat = message.chat
         self.Filter.create(
                 author_module_id = str(chat.module_id),
-                author_channel_name = str(chat.channel_name),
+                author_module_name = str(chat.module_name),
                 author_chat_name = str(chat.chat_name),
                 author_chat_alias = str(chat.chat_alias),
                 chat_chat_uid = str(chat.chat_uid),
