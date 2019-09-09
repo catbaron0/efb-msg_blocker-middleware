@@ -31,7 +31,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
     def __init__(self, instance_id=None):
         super().__init__()
         self.types = {
-            'image', 'audio', 'file', 'link', 'location', 'status',
+            'image', 'animation', 'audio', 'file', 'link', 'location', 'status',
             'sticker', 'text', 'video', 'unsupported'
             }
         self.db: DatabaseManager = DatabaseManager(self)
@@ -74,7 +74,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
         """
         self.logger.info("List filters...")
 
-        filters_data: List = [str]
+        filters_data: List[str] = list()
         target: EFBMsg = message.target
 
         # Read filters from self.filters
@@ -279,6 +279,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
             types: List[str] = filter_dict['type']
             m_type: MsgType = message.type
             if not('image' in types and m_type == MsgType.Image
+                    or 'animation' in types and m_type == MsgType.Animation
                     or 'audio' in types and m_type == MsgType.Audio
                     or 'file' in types and m_type == MsgType.File
                     or 'link' in types and m_type == MsgType.Link
@@ -313,6 +314,7 @@ class MessageBlockerMiddleware(EFBMiddleware):
         """
         msg_text: str = message.text.strip()
         if self.sent_by_master(message):
+            # import ipdb;ipdb.set_trace()
             if msg_text.startswith('\\'):
                 # command message
                 cmd_arg = msg_text[1:].split(' ', 1)
