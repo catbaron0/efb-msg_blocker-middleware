@@ -49,7 +49,7 @@ class MessageBlockerMiddleware(Middleware):
         msg: Message = Message()
         msg.chat = message.chat
         msg.author = message.author
-        # msg.author.module_id = self.middleware_id
+        msg.author.module_id = self.middleware_id
         # msg.author.module_name = self.middleware_name
         msg.author.name = 'Message Blocker'
         msg.author.alias = ''
@@ -84,7 +84,7 @@ class MessageBlockerMiddleware(Middleware):
                 filters_data.append(str(fi.__data__))
         else:
             # List filters related to an user
-            uid: str = target.author.id
+            uid: str = target.author.uid
             for fi in filters:
                 if uid == eval(fi.filter_text).get('user', ''):
                     filters_data.append(str(fi.__data__))
@@ -132,7 +132,7 @@ class MessageBlockerMiddleware(Middleware):
                 "Filters to user: %s", message.target.author.name
                 )
             # message.chat.chat_name = message.target.chat.chat_name
-            filters['user'] = str(message.target.author.id)
+            filters['user'] = str(message.target.author.uid)
 
         if filters:
             filter_text: str = json.dumps(filters)
@@ -166,7 +166,7 @@ class MessageBlockerMiddleware(Middleware):
             filter_data = []
             for fi in self.select_filters(message):
                 filter_dict = eval(fi.filter_text)
-                if filter_dict.get('user', '') == target.author.id:
+                if filter_dict.get('user', '') == target.author.uid:
                     filter_data.append(str(fi.__data__))
                     fi.delete_instance()
             reply_text: str = 'Filter deleted: %s' % '\n'.join(filter_data)
@@ -191,7 +191,7 @@ class MessageBlockerMiddleware(Middleware):
         """
 
         author_module_id: str = message.chat.module_id
-        chat_uid: str = message.chat.id
+        chat_uid: str = message.chat.uid
         filters: Iterator = self.db.Filter.select().where(
             self.db.Filter.author_module_id == author_module_id,
             self.db.Filter.chat_chat_uid == chat_uid
@@ -208,7 +208,7 @@ class MessageBlockerMiddleware(Middleware):
         """
         self.logger.info('Update filter from database')
         author_module_id: str = message.chat.module_id
-        chat_uid: str = message.chat.id
+        chat_uid: str = message.chat.uid
         filters = self.select_filters(message)
         self.filters[(author_module_id, chat_uid)] = filters
         return filters
@@ -224,7 +224,7 @@ class MessageBlockerMiddleware(Middleware):
         Return:
             List of fitlers
         """
-        key = (message.chat.module_id,  message.chat.id)
+        key = (message.chat.module_id,  message.chat.uid)
         return self.filters.get(key, self.update_filters(message))
 
     # def load_config(self) -> Dict[str, str]:
@@ -262,7 +262,7 @@ class MessageBlockerMiddleware(Middleware):
         author = message.author
         match_user, match_text, match_type = True, True, True
         if 'user' in filter_dict:
-            if filter_dict['user'] != author.id:
+            if filter_dict['user'] != author.uid:
                 match_user = False
         if 'text' in filter_dict:
             k = re.compile(str(filter_dict['text']))
