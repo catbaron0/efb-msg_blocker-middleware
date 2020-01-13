@@ -38,12 +38,13 @@ class DatabaseManager:
 
     def add_filter(self, message: Message, filter_text: str):
         chat = message.chat
+        author = message.author
         self.Filter.create(
-            author_module_id=str(chat.module_id),
-            author_module_name=str(chat.module_name),
-            author_chat_name=str(chat.chat_name),
-            author_chat_alias=str(chat.chat_alias),
-            chat_chat_uid=str(chat.chat_uid),
-            chat_chat_name=str(chat.chat_name),
-            chat_chat_alias=str(chat.chat_alias),
+            author_module_id=str(author.module_id),
+            author_module_name=str(author.module_name),
+            author_chat_name=str(author.name),
+            author_chat_alias=str(author.alias),
+            chat_chat_uid=str(chat.id),
+            chat_chat_name=str(chat.name),
+            chat_chat_alias=str(chat.alias),
             filter_text=filter_text)
