@@ -1,11 +1,12 @@
 from peewee import Model
 from peewee import SqliteDatabase
-from peewee import IntegerField, CharField
-from ehforwarderbot import EFBMiddleware, utils, EFBMsg
+from peewee import CharField
+from ehforwarderbot import Middleware, utils, Message
 import os
 
+
 class DatabaseManager:
-    def __init__(self, middleware: EFBMiddleware):
+    def __init__(self, middleware: Middleware):
         base_path = utils.get_data_path(middleware.middleware_id)
         # self.db = SqliteDatabase(str(base_path / 'ftdata.db'))
         self.db = SqliteDatabase(os.path.join(base_path, 'ftdata.db'))
@@ -35,17 +36,14 @@ class DatabaseManager:
         filter_instance = self.Filter.get(id=filter_id)
         filter_instance.delete_instance()
 
-    def add_filter(self, message: EFBMsg, filter_text: str):
+    def add_filter(self, message: Message, filter_text: str):
         chat = message.chat
         self.Filter.create(
-                author_module_id = str(chat.module_id),
-                author_module_name = str(chat.module_name),
-                author_chat_name = str(chat.chat_name),
-                author_chat_alias = str(chat.chat_alias),
-                chat_chat_uid = str(chat.chat_uid),
-                chat_chat_name = str(chat.chat_name),
-                chat_chat_alias = str(chat.chat_alias),
-                filter_text = filter_text
-                )
-
-
+            author_module_id=str(chat.module_id),
+            author_module_name=str(chat.module_name),
+            author_chat_name=str(chat.chat_name),
+            author_chat_alias=str(chat.chat_alias),
+            chat_chat_uid=str(chat.chat_uid),
+            chat_chat_name=str(chat.chat_name),
+            chat_chat_alias=str(chat.chat_alias),
+            filter_text=filter_text)
