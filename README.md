@@ -44,13 +44,14 @@ Usually you just need to add the last line to your config file.
 ## Usage
 Three commands are supported by this middleware, namely `list`, `add` and `del`. To avoid conflict to other channels' command, all the commands MUST follows `\msg_blocer` and a space.
 
-* `\msg_blocker list`: List all the filters you have added to one chat, with `id`, `chat_name`, `user_name` and `msg_type` for each filter.
+* `\msg_blocker list`: List all the filters you have added to one chat. You can reply this command to a message, then only filters applied to the author of the target message will be listed. You would see `id`, `chat_name`, `user_name` and `msg_type` for each filter.
     * `id` is the unique ID for this filter. You need it to delete a filter
     * `chat_name` should be the name of current chat where you send the command.
     * `user_name` is the user whose message will be filtered
     * `msg_type` is type of messages to filter out. 
-* `\msg_blocker del {id}`: Delete a filter with filter `id`. (e.g. `\del 1`). 
+* `\msg_blocker del {id}`: Delete a filter with filter `id`.
 * `\msg_blocker add {msg_type}`: Add filters. There are some ways to add filters.
     * `msg_type` is one of any  supported `type`, so that all the messages in the specific type will be blocked. For example `\msg_blocker add image` adds a filter to block all the image messages.
     * You cloud reply `\msg_blocker add image` to a message. **MessageBLocker** will get the author of the replied message, and only block image message from the author.
+    * If you reply to a message with `\msg_blocker add`, without the `msg_type` argument, all the message from the author will be blocked.
 
