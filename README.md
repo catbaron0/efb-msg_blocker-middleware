@@ -4,9 +4,7 @@
 
 **Middleware ID**: `catbaron.message_blocker`
 
-**MessageBLocker** is a middleware for EFB, to manage filters and block some specific messages. 
-
-**MessageBlocker** works on top of [EFB](https://ehforwarderbot.readthedocs.io). 
+**MessageBLocker** is a middleware for [EFB](https://ehforwarderbot.readthedocs.io), to manage filters and block some specific messages. 
 
 ## Dependense
 
