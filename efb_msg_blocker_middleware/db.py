@@ -38,7 +38,7 @@ class DatabaseManager:
         else:
             raise KeyError
 
-    def add_filter(self, chat: Chat, user: ChatMember, msg_type: str):
+    def add_filter(self, chat: Chat, user: Optional[ChatMember], msg_type: str):
         user_id = ""
         user_name = ""
         if user:
