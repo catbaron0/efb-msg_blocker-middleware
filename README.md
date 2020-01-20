@@ -6,6 +6,8 @@
 
 **MessageBLocker** is a middleware for [EFB](https://ehforwarderbot.readthedocs.io), to manage filters and block some specific messages. 
 
+**Note:** I rewrite most parts of this middleware in the last update. Please read the `usage` section to check the change. Because the structer of database is changed, you may need to delete the database file in order to make it work (usually it's at `~/.ehforwarderbot/profiles/default/catbaron.msg_blocker/ftdata.db`). 
+
 ## Dependense
 
 * Python >= 3.6

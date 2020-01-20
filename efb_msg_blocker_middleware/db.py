@@ -10,7 +10,7 @@ from typing import Optional
 class DatabaseManager:
     def __init__(self, middleware: Middleware):
         base_path = utils.get_data_path(middleware.middleware_id)
-        self.db = SqliteDatabase(os.path.join(base_path, 'filters.db'))
+        self.db = SqliteDatabase(os.path.join(base_path, 'ftdata.db'))
         self.db.connect()
 
         class BaseModel(Model):
