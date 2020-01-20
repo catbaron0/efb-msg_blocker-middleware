@@ -9,7 +9,7 @@ import time
 import yaml
 from ehforwarderbot import Middleware, Message, MsgType
 from ehforwarderbot import Chat, coordinator
-from ehforwarderbot.types import MessageID, ModuleID
+from ehforwarderbot.types import MessageID, ModuleID, ChatID
 from ehforwarderbot.chat import ChatMember
 from ehforwarderbot.utils import get_config_path
 
@@ -49,10 +49,12 @@ class MessageBlockerMiddleware(Middleware):
         msg: Message = Message()
         msg.chat = chat
         try:
-            msg.author = msg.chat.get_member(self.middleware_id)
+            msg.author = msg.chat.get_member(
+                ChatID(self.middleware_id)
+            )
         except KeyError:
             msg.author = msg.chat.add_system_member(
-                uid=self.middleware_id,
+                uid=ChatID(self.middleware_id),
                 middleware=self,
                 name="Message Blocker"
             )
@@ -122,6 +124,11 @@ class MessageBlockerMiddleware(Middleware):
         if not user and not msg_type:
             # user and msg_type can't be both Null
             reply_text = "User and message type can't be both null"
+            return self.gen_reply_msg(chat, reply_text)
+        try:
+            MsgType(msg_type)
+        except ValueError:
+            reply_text = f"Invalid message type: {msg_type}"
             return self.gen_reply_msg(chat, reply_text)
         try:
             self.db.add_filter(chat, user, msg_type)
