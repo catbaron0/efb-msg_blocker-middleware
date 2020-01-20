@@ -4,13 +4,18 @@ import logging
 import os
 from typing import Any, Dict, Optional, List, Tuple, Callable, Iterator
 import re
+import time
 
 import yaml
-from ehforwarderbot import Middleware, Message, MsgType, coordinator
+from ehforwarderbot import Middleware, Message, MsgType
+from ehforwarderbot import Chat, coordinator
+from ehforwarderbot.types import MessageID, ModuleID
+from ehforwarderbot.chat import ChatMember
 from ehforwarderbot.utils import get_config_path
 
+
 from . import __version__ as version
-from .db import DatabaseManager
+from .db import DatabaseManager as DB
 
 
 class MessageBlockerMiddleware(Middleware):
@@ -20,7 +25,7 @@ class MessageBlockerMiddleware(Middleware):
     Author: Catbaron <https://github.com/catbaron0>
     """
 
-    middleware_id = "catbaron.msg_blocker"
+    middleware_id = ModuleID("catbaron.msg_blocker")
     middleware_name = "Message Blocker Middleware"
     __version__ = version.__version__
     logger: logging.Logger = logging.getLogger(
@@ -30,287 +35,157 @@ class MessageBlockerMiddleware(Middleware):
     def __init__(self, instance_id=None):
         super().__init__()
         self.types = {
-            'image', 'animation', 'audio', 'file', 'link', 'location', 'status',
-            'sticker', 'text', 'video', 'unsupported'
+            'image', 'animation', 'audio', 'file', 'link', 'location',
+            'status', 'sticker', 'text', 'video', 'unsupported'
             }
-        self.db: DatabaseManager = DatabaseManager(self)
-        # To avoid reading from db, save filters to self.filters
-        # and keep it up to date
-        # Not necessary though.
-        self.filters: Dict[Tuple, List] = dict()
-
+        self.db: DB = DB(self)
         self.commands: Dict[str, Callable] = {
                 'list': self.cmd_list_filter,
                 'add': self.cmd_add_filter,
                 'del': self.cmd_del_filter
                 }
 
-    def gen_reply_msg(self, message: Message, text: str) -> Message:
+    def gen_reply_msg(self, chat: Chat, text: str) -> Message:
         msg: Message = Message()
-        msg.chat = message.chat
-        msg.author = message.author
-        msg.author.module_id = self.middleware_id
-        # msg.author.module_name = self.middleware_name
-        msg.author.name = 'Message Blocker'
-        msg.author.alias = ''
-        msg.author.description = ''
-        msg.author.middleware = self
+        msg.chat = chat
+        try:
+            msg.author = msg.chat.get_member(self.middleware_id)
+        except KeyError:
+            msg.author = msg.chat.add_system_member(
+                uid=self.middleware_id,
+                middleware=self,
+                name="Message Blocker"
+            )
+        # msg.author = SystemChatMember(msg.chat, middleware=self)
+        # msg.author.name = 'Message Blocker'
+        # msg.author.uid = self.middleware_id
         msg.deliver_to = coordinator.master
         msg.type = MsgType.Text
-        msg.uid = message.uid
+        uid = self.middleware_id + str(int(time.time() * 1000))
+        msg.uid = MessageID(uid)
         msg.text = text
         return msg
 
-    def cmd_list_filter(self, message: Message, arg: str) -> Message:
+
+    @staticmethod
+    def gen_filter_text(f) -> str:
+        text: List[str] = list()
+        text.append('-----')
+        text.append(f'id: {f.id}')
+        text.append(f'chat_name: {f.chat_name}')
+        text.append(f'user_name: {f.user_name}')
+        text.append(f'msg_type: {f.msg_type}')
+        return '\n'.join(text)
+
+    def cmd_list_filter(
+            self, message: Message,
+            msg_type: str = "",
+            ) -> Message:
         """
         list filter for current chat.
-        Arguments:
-            message: [Message], the message sending this command.
-            arg: [str], unused here.
-        Return:
-            If the message replies to a target message, return filters
-            related to the author user of target message. Otherwise
-            return all the filters set to current chat.
+        :param message: The command message
+        :param msg_type: To list filters on this message type
+
+        return: Message to reply to the user
         """
         self.logger.info("List filters...")
+        msg_type = msg_type.lower()
+        chat = message.chat
+        user = None
+        if message.target:
+            user = message.target.author
 
-        filters_data: List[str] = list()
-        target: Message = message.target
+        filters = self.db.select_filters(chat, user, msg_type)
+        filter_text = [self.gen_filter_text(f) for f in filters]
 
-        # Read filters from self.filters
-        filters: List = self.get_filters(message)
-        if not target:
-            for fi in filters:
-                filters_data.append(str(fi.__data__))
-        else:
-            # List filters related to an user
-            uid: str = target.author.uid
-            for fi in filters:
-                if uid == eval(fi.filter_text).get('user', ''):
-                    filters_data.append(str(fi.__data__))
-
-        reply_text: str = '\n'.join(filters_data)
+        reply_text: str = '\n'.join(filter_text)
         if not reply_text:
             reply_text = 'No filter was found.'
-        msg = self.gen_reply_msg(message, reply_text)
+        msg = self.gen_reply_msg(chat, reply_text)
         return msg
 
-    def cmd_add_filter(self, message: Message, arg: str) -> Message:
+    def cmd_add_filter( self, message: Message, msg_type: str = "") -> Message:
         """
-        Add a new filter to database, and update self.filters.
-        Arguments:
-            message: [Message], the message sending this command.
-                    If there is a target message, add the author
-                    of the target message to the added filters.
-            arg: [str], content of command arguments.
-                 When arg is one of the types, take the added filters
-                 as {'type', [arg]}, otherwise the arg should be a
-                 json string.
-        """
+        Add a new filter to database
+        :param message: The command message
+        :param msg_type: str, message type to be filtered.
 
+        return: Message to reply to the user
+        """
         self.logger.info("Add filters")
-        arg: str = arg.lower()
-        self.logger.info("filter_text:", arg)
-        filters: Dict[str, Any] = dict()
-        if arg:
-            if arg in self.types:
-                # Add type as filters directly
-                filters['type'] = [arg]
-            else:
-                # Add filter according to the arg string
-                # The arg string should be json-string
-                # Convert the arg to dict object
-                self.logger.info("Filters of arg: %s", arg)
-                try:
-                    filters = eval(arg)
-                except Exception:
-                    reply_text = f"Failed to add filter. Invalid filter text. "
-                    return self.gen_reply_msg(message, reply_text)
+        msg_type = msg_type.lower()
+        chat = message.chat
+        user = None
         if message.target:
-            # Add target author to the filters
-            self.logger.info(
-                "Filters to user: %s", message.target.author.name
-                )
-            # message.chat.chat_name = message.target.chat.chat_name
-            filters['user'] = str(message.target.author.uid)
+            user = message.target.author
 
-        if filters:
-            filter_text: str = json.dumps(filters)
-            self.logger.info("Add filters: %s", filter_text)
-            # Add filters to database
-            self.db.add_filter(message, filter_text)
-            # Update self.filters from database
-            self.update_filters(message)
-            reply_text = f"Filter added: {filter_text}"
-        else:
-            reply_text = f"Failed to add filter. Filter is empty."
+        if not user and not msg_type:
+            # user and msg_type can't be both Null
+            reply_text = "User and message type can't be both null"
+            return self.gen_reply_msg(chat, reply_text)
+        try:
+            self.db.add_filter(chat, user, msg_type)
+            text: List[str] = list()
+            reply_text = f"Filter added."
+        except Exception as e:
+            reply_text = f"Failed to add filter. {e}"
         self.logger.info(reply_text)
-        # filters.update(filters)
-        return self.gen_reply_msg(message, reply_text)
+        return self.gen_reply_msg(chat, reply_text)
 
-    def cmd_del_filter(
-            self, message: Message, filter_id: Optional[str] = None) -> Message:
+    def cmd_del_filter(self, message: Message, filter_id: int) -> Message:
         """
-        Delete a filter from database, and update self.filters.
-        Arguments:
-            message: [Message], the message sending this command.
-                    If there is a target message and the filter_id
-                    is None, delete all the filter related the
-                    author of the target message.
-            filter_id: [str], Id of filter. The filter with the id
-                    will be deleted from the database. """
+        Delete a filter from database
+        """
+        chat = message.chat
+        self.logger.info('Delete filter')
+        try:
+            self.db.delete_filter(chat_id=chat.uid, filter_id=filter_id)
+            reply_text: str = "Filter Deleted"
+        except KeyError:
+            reply_text = "Can't find the filter in current chat."
 
-        target: Message = message.target
-        if not filter_id and target:
-            # Delete all the filters to the author of target message
-            filter_data = []
-            for fi in self.select_filters(message):
-                filter_dict = eval(fi.filter_text)
-                if filter_dict.get('user', '') == target.author.uid:
-                    filter_data.append(str(fi.__data__))
-                    fi.delete_instance()
-            reply_text: str = 'Filter deleted: %s' % '\n'.join(filter_data)
-        elif filter_id:
-            # Delete the filter based on the filter_id
-            self.logger.info('Delete filter')
-            filter_id: int = int(filter_id)
-            reply_text: str = 'Filter deleted: %s' % \
-                self.db.Filter.get(id=filter_id).__data__
-            self.db.delete_filter(filter_id=filter_id)
-        else:
-            reply_text: str = "No filter to delete."
-        self.logger.info(reply_text)
-        self.update_filters(message)
-        return self.gen_reply_msg(message, reply_text)
-
-    def select_filters(self, message: Message) -> List:
-        """
-        Select filters from database based on the mesage sending a command.
-        Arguments:
-            message: [Message], the message sending this command.
-        """
-
-        author_module_id: str = message.chat.module_id
-        chat_uid: str = message.chat.uid
-        filters: Iterator = self.db.Filter.select().where(
-            self.db.Filter.author_module_id == author_module_id,
-            self.db.Filter.chat_chat_uid == chat_uid
-        )
-        return list(filters)
-
-    def update_filters(self, message: Message) -> List:
-        """
-        Update self.filters from database
-        Arguments:
-            message: [Message], the message sending this command.
-        Return:
-            List of fitlers
-        """
-        self.logger.info('Update filter from database')
-        author_module_id: str = message.chat.module_id
-        chat_uid: str = message.chat.uid
-        filters = self.select_filters(message)
-        self.filters[(author_module_id, chat_uid)] = filters
-        return filters
-
-    def get_filters(self, message: Message) -> List:
-        """
-        Get filters added to current chat.
-        To avoid selecting from database everytime querying, get
-        filters from self.filters. Select from database and update
-        self.filters if there is no filters in self.filters.
-        Arguments:
-            message: [Message], the message sending this command.
-        Return:
-            List of fitlers
-        """
-        key = (message.chat.module_id,  message.chat.uid)
-        return self.filters.get(key, self.update_filters(message))
-
-    # def load_config(self) -> Dict[str, str]:
-    #     config_path = get_config_path(self.middleware_id)
-    #     if not os.path.exists(config_path):
-    #         self.self.logger.info('The configure file does not exist!')
-    #         return
-    #     with open(config_path, 'r') as f:
-    #         d = yaml.load(f)
-    #         if not d:
-    #             self.self.logger.info('Load configure file failed!')
-    #             return
-    #         return d
+        return self.gen_reply_msg(chat, reply_text)
 
     @staticmethod
     def sent_by_master(message: Message) -> bool:
         return message.deliver_to != coordinator.master
 
-    def match_msg(self, message: Message, filter_dict: Dict[str, Any]) -> bool:
+    def match_filter(self, message: Message, f) -> bool:
+        if f.user_id and f.user_id != message.author.uid:
+            return False
+        if f.msg_type:
+            msg_type = MsgType(f.msg_type.capitalize())
+            if msg_type != message.type:
+                return False
+        return True
+
+    def filter_message(self, message: Message):
         """
-        Match a message to filters with keys of 'user', 'text' and 'type'.
+        Match a message to filters of this chat.
         The messaged is matched when it matches to all the keys.
-        Arguments:
-            message: [Message] Message to match
-            filter_dict: [Dict], a filter to match
+        :pamram message: [Message] Message to match
         Return:
-            True if the message is matched to the filter.
+            True if the message is matched to one filter.
             False otherwise.
         """
-        if 'user' not in filter_dict \
-                and 'text' not in filter_dict \
-                and 'type' not in filter_dict:
-            return False
-
-        author = message.author
-        match_user, match_text, match_type = True, True, True
-        if 'user' in filter_dict:
-            if filter_dict['user'] != author.uid:
-                match_user = False
-        if 'text' in filter_dict:
-            k = re.compile(str(filter_dict['text']))
-            if not re.search(k, message.text):
-                match_text = False
-        if 'type' in filter_dict:
-            types: List[str] = filter_dict['type']
-            m_type: MsgType = message.type
-            if not('image' in types and m_type == MsgType.Image
-                    or 'animation' in types and m_type == MsgType.Animation
-                    or 'audio' in types and m_type == MsgType.Audio
-                    or 'file' in types and m_type == MsgType.File
-                    or 'link' in types and m_type == MsgType.Link
-                    or 'location' in types and m_type == MsgType.Location
-                    or 'status' in types and m_type == MsgType.Status
-                    or 'sticker' in types and m_type == MsgType.Sticker
-                    or 'text' in types and m_type == MsgType.Text
-                    or 'video' in types and m_type == MsgType.Video
-                    or 'unsupported' in types and m_type == MsgType.Unsupported):
-                match_type = False
-        if match_user:
-            # print('user matched')
-            self.logger.info('user_id matched')
-        if match_type:
-            # print('type matched')
-            self.logger.info('type matched')
-        if match_text:
-            # print('text matched')
-            self.logger.info('text matched')
-        match = match_user and match_text and match_type
-        return match
+        filters = self.db.select_filters(message.chat)
+        for f in filters:
+            if self.match_filter(message, f):
+                return f
+        return None
 
     def process_message(self, message: Message) -> Optional[Message]:
         """
         Process a message with middleware
 
-        Args:
-            message (:obj:`.Message`): Message object to process
-
-        Returns:
-            Optional[:obj:`.Message`]: Processed message or None if discarded.
+        :param message: Message, message to proces
+        :return: Optional[Message], message or None if discarded.
         """
         msg_text: str = message.text.strip()
         if self.sent_by_master(message):
-            # import ipdb;ipdb.set_trace()
-            if msg_text.startswith('\\'):
+            if msg_text.startswith('\\msg_blocker '):
                 # command message
-                cmd_arg = msg_text[1:].split(' ', 1)
+                cmd_arg = msg_text.split(' ', 2)[1:]
                 if len(cmd_arg) > 1:
                     cmd, arg = cmd_arg
                 else:
@@ -318,21 +193,20 @@ class MessageBlockerMiddleware(Middleware):
                 if cmd in self.commands:
                     return self.commands[cmd](message, arg)
                 else:
-                    return message
+                    return self.gen_reply_msg(
+                        message.chat, f"{cmd} is not a msg_blocker command")
             else:
                 # normal message, pass it.
                 return message
 
         # Match messages from salves to filters
-        matched = False
-        for fi in self.get_filters(message):
-            filter_dict = eval(fi.filter_text)
-            matched = self.match_msg(message, filter_dict)
-            if matched:
-                break
-        if not matched:
-            return message
-        else:
-            # print('Message blocked!')
-            self.logger.info('Message blocked: %s', message.__dict__)
+        f = self.filter_message(message)
+        if f:
+            reply = self.gen_filter_text(f)
+            self.logger.info(
+                'Message blocked by: %s',
+                reply
+            )
             return None
+        else:
+            return message
