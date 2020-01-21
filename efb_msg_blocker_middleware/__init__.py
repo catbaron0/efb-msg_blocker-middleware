@@ -126,6 +126,7 @@ class MessageBlockerMiddleware(Middleware):
             reply_text = "User and message type can't be both null"
             return self.gen_reply_msg(chat, reply_text)
         try:
+            msg_type = msg_type.capitalize()
             MsgType(msg_type)
         except ValueError:
             reply_text = f"Invalid message type: {msg_type}"
