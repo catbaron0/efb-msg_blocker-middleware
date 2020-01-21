@@ -51,7 +51,7 @@ Three commands are supported by this middleware, namely `list`, `add` and `del`.
     * `msg_type` is type of messages to filter out. 
 * `\msg_blocker del {id}`: Delete a filter with filter `id`.
 * `\msg_blocker add {msg_type}`: Add filters. There are some ways to add filters.
-    * `msg_type` is one of any `type` supported by **EFB** (including `Unsupported` type), so that all the messages in the specific type will be blocked. For example `\msg_blocker add image` adds a filter to block all the image messages.
+    * `msg_type` is one of any `type` supported by **EFB** (including `Unsupported` type), so that all the messages in the specific type will be blocked. Check all of the supported types [here](https://ehforwarderbot.readthedocs.io/en/latest/API/constants.html#ehforwarderbot.constants.MsgType). For example `\msg_blocker add image` adds a filter to block all the image messages.
     * You cloud reply `\msg_blocker add image` to a message. **MessageBLocker** will get the author of the replied message, and only block image message from the author.
     * If you reply to a message with `\msg_blocker add`, without the `msg_type` argument, all the message from the author will be blocked.
 
