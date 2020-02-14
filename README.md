@@ -23,7 +23,7 @@
     ```
     git clone https://github.com/catbaron0/efb-msg_blocker-middleware
     cd efb-msg_blocker-middleware
-    Python setup.py install # You may need su permission here
+    sudo python setup.py install # You may need su permission here
     ```
 * Register to EFB
 Following [this document](https://ehforwarderbot.readthedocs.io/en/latest/getting-started.html) to edit the config file. The config file by default is `~/.ehforwarderbot/profiles/default`. It should look like:
@@ -42,7 +42,7 @@ Following [this document](https://ehforwarderbot.readthedocs.io/en/latest/gettin
 * Restart EFB.
 
 ## Usage
-Three commands are supported by this middleware, namely `list`, `add` and `del`. To avoid conflict to other channels' command, all the commands MUST follows `\msg_blocer` and a space, as shown below.
+Three commands are supported by this middleware, namely `list`, `add` and `del`. To avoid conflict to other channels' command, all the commands MUST follow `\msg_blocer` and a space, as shown below.
 
 * `\msg_blocker list`: List all the filters you have added to one chat. You can reply this command to a message, then only filters applied to the author of the target message will be listed. You will see `id`, `chat_name`, `user_name` and `msg_type` for each filter.
     * `id` is the unique ID for this filter. You need it to delete a filter

@@ -13,7 +13,7 @@ setup(
     name='efb-msg_blocker-middleware',
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     version=__version__,
-    description='WeChat Middleware for EH Forwarder Bot to remove image messages',
+    description='WeChat Middleware for EH Forwarder Bot to block messages',
     long_description=long_description,
     author='catbaron',
     author_email='catbaron@live.cn',
