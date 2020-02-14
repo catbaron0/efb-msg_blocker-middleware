@@ -34,7 +34,7 @@ Following [this document](https://ehforwarderbot.readthedocs.io/en/latest/gettin
     - bar.dummy
     middlewares:
     - foo.other_middlewares
-    - catbaron.message_blocker
+    - catbaron.msg_blocker
     ```
 
     Usually you just need to add the last line to your config file.
