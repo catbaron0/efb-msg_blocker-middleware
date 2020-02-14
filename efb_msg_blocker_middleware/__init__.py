@@ -125,15 +125,15 @@ class MessageBlockerMiddleware(Middleware):
             # user and msg_type can't be both Null
             reply_text = "User and message type can't be both null"
             return self.gen_reply_msg(chat, reply_text)
-        try:
-            msg_type = msg_type.capitalize()
-            MsgType(msg_type)
-        except ValueError:
-            reply_text = f"Invalid message type: {msg_type}"
-            return self.gen_reply_msg(chat, reply_text)
+        if msg_type:
+            try:
+                msg_type = msg_type.capitalize()
+                MsgType(msg_type)
+            except ValueError:
+                reply_text = f"Invalid message type: {msg_type}"
+                return self.gen_reply_msg(chat, reply_text)
         try:
             self.db.add_filter(chat, user, msg_type)
-            text: List[str] = list()
             reply_text = f"Filter added."
         except Exception as e:
             reply_text = f"Failed to add filter. {e}"
