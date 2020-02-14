@@ -8,6 +8,10 @@
 
 **Note:** I rewrite most parts of this middleware in the last update. Please read the `usage` section to check the change. Because the structer of database is changed, you may need to delete the database file in order to make it work (usually it's at `~/.ehforwarderbot/profiles/default/catbaron.msg_blocker/ftdata.db`). 
 
+**Note:** If you are looking for a way to block all messages from so called `Official Accounts(公众号)`, this plugin is not what you need. Here are some advices:
+* Don't subscribe any official accounts. They don't worth it.
+* Link all official accounts to one chat, and block the chat. Refer to [wiki of EWS](https://github.com/blueset/efb-wechat-slave/wiki/EWS-&-ETM%EF%BC%9A%E6%89%B9%E9%87%8F%E7%BB%91%E5%AE%9A%EF%BC%88%E5%85%AC%E4%BC%97%E5%8F%B7%E7%AD%89%EF%BC%89).
+
 ## Dependense
 
 * Python >= 3.6
