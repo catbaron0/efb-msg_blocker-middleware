@@ -1,17 +1,11 @@
 # coding: utf-8
-import json
 import logging
-import os
-from typing import Any, Dict, Optional, List, Tuple, Callable, Iterator
-import re
+from typing import Dict, Optional, List, Callable
 import time
 
-import yaml
 from ehforwarderbot import Middleware, Message, MsgType
 from ehforwarderbot import Chat, coordinator
 from ehforwarderbot.types import MessageID, ModuleID, ChatID
-from ehforwarderbot.chat import ChatMember
-from ehforwarderbot.utils import get_config_path
 
 
 from . import __version__ as version
