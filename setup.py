@@ -15,6 +15,7 @@ setup(
     version=__version__,
     description='WeChat Middleware for EH Forwarder Bot to block messages',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     author='catbaron',
     author_email='catbaron@live.cn',
     url='https://github.com/catbaron0/efb-msg_blocker-middleware',
@@ -23,7 +24,7 @@ setup(
     python_requires='>=3.6',
     keywords=['ehforwarderbot', 'EH Forwarder Bot', 'EH Forwarder Bot Middleware', 'chatbot'],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         "Intended Audience :: Developers",
         "Intended Audience :: End Users/Desktop",

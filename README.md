@@ -25,9 +25,7 @@
 
 * Install
     ```
-    git clone https://github.com/catbaron0/efb-msg_blocker-middleware
-    cd efb-msg_blocker-middleware
-    sudo python setup.py install # You may need su permission here
+    pip install efb-msg_blocker-middleware
     ```
 * Register to EFB
 Following [this document](https://ehforwarderbot.readthedocs.io/en/latest/getting-started.html) to edit the config file. The config file by default is `~/.ehforwarderbot/profiles/default`. It should look like:
