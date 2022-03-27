@@ -2,7 +2,7 @@
 
 ## Notice
 
-**Middleware ID**: `catbaron.message_blocker`
+**Middleware ID**: `catbaron.msg_blocker`
 
 **MessageBLocker** is a middleware for [EFB](https://ehforwarderbot.readthedocs.io), to manage filters and block some specific messages. 
 
